@@ -152,6 +152,7 @@ class Classifier():
         total_train_samples = train['uni'].shape[0]
         train_gen = self.get_sample_generator(train,
                                               batch_size=opt.batch_size)
+        #train_gen generates batch array of (uni, w_uni), cate in while iteration to feed (inputs, targets)
         self.steps_per_epoch = int(np.ceil(total_train_samples / float(opt.batch_size)))
 
         total_dev_samples = dev['uni'].shape[0]
@@ -159,6 +160,11 @@ class Classifier():
                                             batch_size=opt.batch_size)
         self.validation_steps = int(np.ceil(total_dev_samples / float(opt.batch_size)))
 
+        """
+        shuffle=TRUE will not work,
+        because it requires to use keras's Sequence for generator, and None for steps_per_ephoch.
+        use_multiprocessing option can enhance performance.
+        """
         model.fit_generator(generator=train_gen,
                             steps_per_epoch=self.steps_per_epoch,
                             epochs=opt.num_epochs,
