@@ -6,3 +6,8 @@ numpy
 tensorflow
 six
 mmh3
+
+##tensorflow can't work on python 3.7, so that install python 3.6.x instead of 3.7
+brew unlink python
+brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb
+

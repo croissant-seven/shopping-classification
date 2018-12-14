@@ -171,7 +171,8 @@ class Data:
         reader = Reader(data_path_list, div, begin_offset, end_offset)
         rets = []
         for pid, label, h, i in reader.generate():
-            y, x = self.parse_data(label, h, i)
+            y, x = self.parse_data(label, h['product'][i])
+            # y is labels, x is tuple(word list and freqency list)
             if y is None:
                 continue
             rets.append((pid, y, x))
@@ -200,15 +201,17 @@ class Data:
             raise
         return num_chunks
 
-    def parse_data(self, label, h, i):
+    def parse_data(self, label, product):
+        """
+        return label array in binary format, array of word idx, array of word frequencies
+        """
         Y = self.y_vocab.get(label)
         if Y is None and self.div in ['dev', 'test']:
             Y = 0
         if Y is None and self.div != 'test':
             return [None] * 2
         Y = to_categorical(Y, len(self.y_vocab))
-
-        product = h['product'][i]
+        # ex of Y: [0, 0, 0, ... 1, 0, 0, 0, ..., 0]
         if six.PY3:
             product = product.decode('utf-8')
         product = re_sc.sub(' ', product).strip().split()
@@ -217,10 +220,12 @@ class Data:
                  if len(w) >= opt.min_word_length and len(w) < opt.max_word_length]
         if not words:
             return [None] * 2
-
+        # ex of words: ['직소퍼즐', '조각', '바다거북의', '여행', 'PL']
         hash_func = hash if six.PY2 else lambda x: mmh3.hash(x, seed=17)
         x = [hash_func(w) % opt.unigram_hash_size + 1 for w in words]
+        # ex of x: [10176, 30012, 34166, 70567, 9173]
         xv = Counter(x).most_common(opt.max_len)
+        # ex of xv: [(10176, 1), (30012, 1), (34166, 1), (70567, 1), (9173, 1)]
 
         x = np.zeros(opt.max_len, dtype=np.float32)
         v = np.zeros(opt.max_len, dtype=np.int32)
